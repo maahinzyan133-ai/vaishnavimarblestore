@@ -10,6 +10,9 @@
   "engines": {
     "node": ">=20"
   },
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  },
   "scripts": {
     "build": "npm run build --workspace vaishnavi-marble-frontend",
     "start": "npm run start --workspace vaishnavi-marble-api"
