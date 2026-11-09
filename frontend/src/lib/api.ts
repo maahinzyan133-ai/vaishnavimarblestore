@@ -39,7 +39,14 @@ const jsonBody = (payload: unknown): RequestInit => ({
 export const api = {
   getCategories: (slug?: string) => {
     const query = queryString({ slug });
-    return apiFetch<Category[]>(`/categories${query ? `?${query}` : ''}`);
+    return apiFetch<Category[] | null>(`/categories${query ? `?${query}` : ''}`)
+      .then(categories => {
+        if (categories === null) return [];
+        if (!Array.isArray(categories)) {
+          throw new TypeError('Expected categories response to be an array');
+        }
+        return categories;
+      });
   },
   getSubcategoriesByCategoryId: (categoryId: string | number) =>
     apiFetch<Subcategory[]>(`/subcategories?category_id=${encodeURIComponent(String(categoryId))}`),
