@@ -1,0 +1,17 @@
+{
+  "name": "vaishnavi-marble",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build --workspace vaishnavi-marble-frontend",
+    "start": "npm run start --workspace vaishnavi-marble-api"
+  }
+}

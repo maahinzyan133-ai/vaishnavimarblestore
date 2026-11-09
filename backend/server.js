@@ -3,6 +3,8 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { pool } from './config/database.js';
 import adminRoutes from './routes/admin.js';
@@ -16,6 +18,7 @@ import { uploadDir } from './middleware/upload.js';
 import { migrateDatabase } from './scripts/migrate.js';
 
 const app = express();
+const frontendDistDir = resolve(dirname(fileURLToPath(import.meta.url)), '../frontend/dist');
 
 // Server configuration
 const PORT = Number(process.env.PORT || 3000);
@@ -53,6 +56,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Static uploaded images
 app.use('/uploads', express.static(uploadDir));
+app.use(express.static(frontendDistDir));
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -80,6 +84,16 @@ app.use('/api/uploads', requireAdmin, uploadRoutes);
 app.use('/api', catalogRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/admin', adminRoutes);
+
+app.get('*', (req, res, next) => {
+  if (req.path === '/api' || req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
+    return next();
+  }
+
+  return res.sendFile(resolve(frontendDistDir, 'index.html'), error => {
+    if (error) next(error);
+  });
+});
 
 // 404 handler
 app.use((req, res) => {
