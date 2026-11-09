@@ -1,0 +1,190 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-stone-50 text-stone-900;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold text-stone-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#ff9d17] hover:text-black transition-colors;
+  }
+
+  .btn-secondary {
+    @apply border border-stone-300 text-stone-800 px-6 py-3 rounded-lg font-semibold hover:bg-stone-50 transition-colors;
+  }
+
+  .card {
+    @apply bg-white rounded-lg border border-stone-200 shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  .prose {
+    @apply space-y-4;
+  }
+
+  .prose p {
+    @apply text-stone-700 leading-relaxed;
+  }
+
+  .prose h2 {
+    @apply text-2xl font-bold text-stone-900 mt-8 mb-4;
+  }
+
+  .prose h3 {
+    @apply text-xl font-bold text-stone-900 mt-6 mb-3;
+  }
+
+  .prose ul,
+  .prose ol {
+    @apply ml-6 space-y-2;
+  }
+
+  .prose li {
+    @apply text-stone-700;
+  }
+
+  .prose code {
+    @apply bg-stone-100 px-2 py-1 rounded text-sm text-red-600 font-mono;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-[#ff9d17] pl-4 py-2 italic text-stone-600;
+  }
+}
+
+/* =========================================
+   GENERAL ANIMATIONS
+   ========================================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* =========================================
+   VAISHNAV MARBLE SHOP MARQUEE
+   ========================================= */
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 45s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Mobile marquee speed */
+@media (max-width: 640px) {
+  .animate-marquee {
+    animation-duration: 35s;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .animate-marquee {
+    animation-duration: 40s;
+  }
+}
+
+/* =========================================
+   SCROLLBAR STYLING
+   ========================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f5f4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a8a29e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #78716b;
+}
+
+/* =========================================
+   SMOOTH SCROLLING
+   ========================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* =========================================
+   SELECTION
+   ========================================= */
+
+::selection {
+  background: #ff9d17;
+  color: #000000;
+}
+
+/* =========================================
+   FOCUS
+   ========================================= */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #ff9d17;
+  outline-offset: 2px;
+}
