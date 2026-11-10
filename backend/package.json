@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "build": "npm --prefix ../frontend install && npm --prefix ../frontend run build",
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seedAdmin.js"
   },
