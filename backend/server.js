@@ -1,9 +1,11 @@
 
 import 'dotenv/config';
+
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import { dirname, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { pool } from './config/database.js';
@@ -18,7 +20,13 @@ import { uploadDir } from './middleware/upload.js';
 import { migrateDatabase } from './scripts/migrate.js';
 
 const app = express();
-const frontendDistDir = resolve(dirname(fileURLToPath(import.meta.url)), '../frontend/dist');
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Frontend build directory
+const frontendDistDir = resolve(__dirname, '../frontend/dist');
+const frontendIndexFile = resolve(frontendDistDir, 'index.html');
 
 // Server configuration
 const PORT = Number(process.env.PORT || 3000);
@@ -36,8 +44,16 @@ const origins = (
 
 app.disable('x-powered-by');
 
-app.use(helmet());
+// Security
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: 'cross-origin',
+    },
+  })
+);
 
+// CORS
 app.use(
   cors({
     origin(origin, callback) {
@@ -51,12 +67,21 @@ app.use(
   })
 );
 
+// Request parsers
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Static uploaded images
+// Uploaded images
 app.use('/uploads', express.static(uploadDir));
-app.use(express.static(frontendDistDir));
+
+// Frontend static assets
+if (existsSync(frontendIndexFile)) {
+  app.use(express.static(frontendDistDir));
+} else {
+  console.error(
+    `Frontend build not found: ${frontendIndexFile}`
+  );
+}
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -66,6 +91,9 @@ app.get('/api/health', async (req, res) => {
     return res.status(200).json({
       status: 'ok',
       database: 'connected',
+      frontend: existsSync(frontendIndexFile)
+        ? 'available'
+        : 'missing',
       environment: NODE_ENV,
     });
   } catch (error) {
@@ -85,13 +113,26 @@ app.use('/api', catalogRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/admin', adminRoutes);
 
+// React Router fallback
 app.get('*', (req, res, next) => {
-  if (req.path === '/api' || req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
+  if (
+    req.path === '/api' ||
+    req.path.startsWith('/api/') ||
+    req.path.startsWith('/uploads/')
+  ) {
     return next();
   }
 
-  return res.sendFile(resolve(frontendDistDir, 'index.html'), error => {
-    if (error) next(error);
+  if (!existsSync(frontendIndexFile)) {
+    return res.status(503).send(
+      'Frontend build is missing. Please rebuild and redeploy the application.'
+    );
+  }
+
+  return res.sendFile(frontendIndexFile, error => {
+    if (error) {
+      next(error);
+    }
   });
 });
 
@@ -133,7 +174,9 @@ app.use((error, req, res, next) => {
   }
 
   return res.status(status).json({
-    error: status >= 500 ? 'Internal server error' : error.message,
+    error: status >= 500
+      ? 'Internal server error'
+      : error.message,
   });
 });
 
@@ -159,6 +202,7 @@ async function shutdown(signal) {
     }
 
     await pool.end();
+
     console.log('Server shutdown completed.');
     process.exit(0);
   } catch (error) {
@@ -185,11 +229,20 @@ async function startServer() {
     throw new Error('AUTO_MIGRATE must be "true" or "false"');
   }
 
-  // Verify database connection
+  // Check frontend build
+  if (!existsSync(frontendIndexFile)) {
+    console.error(
+      `WARNING: Frontend build missing at ${frontendIndexFile}`
+    );
+  } else {
+    console.log('Frontend build found successfully.');
+  }
+
+  // Verify database
   await pool.query('SELECT 1');
   console.log('MySQL database connected successfully.');
 
-  // Run migrations when enabled
+  // Optional database migrations
   if (autoMigrate?.toLowerCase() === 'true') {
     console.log('Running database migrations...');
     await migrateDatabase();
@@ -199,6 +252,7 @@ async function startServer() {
   server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Vaishnavi Marble API running on port ${PORT}`);
     console.log(`Environment: ${NODE_ENV}`);
+    console.log(`Frontend directory: ${frontendDistDir}`);
   });
 
   server.on('error', error => {
